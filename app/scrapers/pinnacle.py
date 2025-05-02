@@ -10,7 +10,7 @@ def combine_dicts(*dicts):
             result.setdefault(key, []).append(value)
     return result
 
-def pinnaclelines():
+def scrape():
     try:
         response = requests.get(PINNACLE_API_URL)
         response.raise_for_status()
@@ -128,6 +128,5 @@ def pinnaclelines():
         return
 
     combined = combine_dicts(game_odds_dict, prop_info)
-
-
-pinnaclelines()
+    print(combined)
+    return combined
