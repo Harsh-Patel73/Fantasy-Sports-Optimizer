@@ -1,0 +1,14 @@
+from app.models.base import Base
+from sqlalchemy import Column, Integer, String, DECIMAL, TIMESTAMP
+from sqlalchemy.orm import relationship
+
+class Matchups(Base):
+    __tablename__ = 'matchups'
+
+    matchup_id = Column(Integer, primary_key=True, index=True)
+    home_team = Column(String(255))
+    away_team = Column(String(255))
+    scrape_timestamp = Column(TIMESTAMP)
+
+    statlines = relationship("Statlines", back_populates="matchup")
+
