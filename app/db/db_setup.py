@@ -24,6 +24,16 @@ def setup_database():
     finally:
         connection.close()
 
+    # Database connection URL
     DATABASE_URL = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database_name}"
     engine = create_engine(DATABASE_URL, echo=True)
-    Base.metadata.create_all(engine)
+
+    # Drop all existing tables in the database
+    print("Dropping all tables in the database...")
+    Base.metadata.drop_all(engine)  # Drop all tables
+
+    # Create all tables again
+    print("Creating all tables...")
+    Base.metadata.create_all(engine)  # Create all tables
+
+    print("Database setup complete.")

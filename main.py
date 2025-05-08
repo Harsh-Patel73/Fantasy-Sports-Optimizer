@@ -1,15 +1,18 @@
 from app.scrapers import pinnacle
+from app.scrapers import prizepicks
 from app.db.db_setup import setup_database
+import time
 
 def run_all():
     print("Setting up database")
     setup_database()
     print("Running all scrapers")
 
-    try: 
-        pinnacle.scrape()
-    except Exception as e:
-        print(f"Pinnacle scrape failed: {e}")
+    try: pinnacle.scrape()
+    except Exception as e: print(f"Pinnacle scrape failed: {e}") 
+    
+    try: prizepicks.scrape()
+    except Exception as e: print(f"Prizepicks scrape failed: {e}")
 
 
 if __name__ == "__main__":
