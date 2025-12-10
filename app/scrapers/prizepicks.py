@@ -1,11 +1,9 @@
 import requests
 from datetime import datetime
 from decimal import Decimal
-from app.db.session import SessionLocal
-from app.models.books import Books
-from app.models.statlines import Statlines
-from app.models.matchups import Matchups
-from app.models.props import Props
+from app.db import get_session
+from app.models import Books, Statlines, Matchups, Props
+from app.utils import normalize_stat_type
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0',
@@ -16,7 +14,7 @@ HEADERS = {
     'Connection': 'keep-alive'
 }
 
-PROJECTIONS_URL = "https://api.prizepicks.com/projections?league_id=7&per_page=250&single_stat=true&in_game=true&state_code=TX&game_mode=pickem"
+PROJECTIONS_URL = "https://api.prizepicks.com/projections?league_id=40&per_page=250&single_stat=true&in_game=true&state_code=TX&game_mode=pickem"
 
 def get_or_create_matchup(session, home_team, away_team):
     matchup = session.query(Matchups).filter_by(home_team=home_team, away_team=away_team).first()
@@ -30,9 +28,12 @@ def get_or_create_prop(session, category, units, description):
     if category == "total" and units is not None:
         category = "Player Props"
 
-    prop = session.query(Props).filter_by(category=category, units=units).first()
+    # Normalize the units for consistent naming across sources
+    normalized_units = normalize_stat_type(units) if units else None
+
+    prop = session.query(Props).filter_by(category=category, units=normalized_units).first()
     if not prop:
-        prop = Props(category=category, units=units, description=description)
+        prop = Props(category=category, units=normalized_units, description=description)
         session.add(prop)
         session.flush()
 
@@ -54,7 +55,8 @@ def add_statline(session, book_id, player_name, matchup_id, prop_id, price, desi
 
 def scrape():
     now = datetime.now()
-    with SessionLocal() as session:
+    Session = get_session()
+    with Session() as session:
         try:
             book = Books(book_name="PrizePicks", book_type="Fantasy", scrape_timestamp=now)
             session.add(book)
@@ -63,7 +65,7 @@ def scrape():
             response = requests.get(PROJECTIONS_URL, headers=HEADERS)
             response.raise_for_status()
             data = response.json()
-
+            print(data)
             included_players = {
                 item['id']: item['attributes']['name']
                 for item in data.get('included', [])
@@ -71,6 +73,7 @@ def scrape():
             }
 
             for prop in data['data']:
+                
                 attr = prop['attributes']
                 relationships = prop.get('relationships', {})
                 player_id = relationships.get('new_player', {}).get('data', {}).get('id')

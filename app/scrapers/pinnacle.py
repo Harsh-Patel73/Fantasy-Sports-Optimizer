@@ -1,59 +1,11 @@
 import requests
 from datetime import datetime
 from decimal import Decimal
-from app.db.session import SessionLocal
-from app.models.books import Books
-from app.models.statlines import Statlines
-from app.models.matchups import Matchups
-from app.models.props import Props
+from app.db import get_session
+from app.models import Books, Statlines, Matchups, Props
+from app.utils import normalize_stat_type
 
 PINNACLE_API_URL = "https://www.pinnacle.com/config/app.json"
-
-def normalize_stat_type(stat):
-    if not stat:
-        return "Unknown"
-
-    # Normalize stat for comparison (lowercase and remove spaces or underscores)
-    normalized_key = stat.lower().replace(" ", "").replace("_", "")
-
-    # Dictionary of replacements with standardized keys
-    replacements = {
-        "pointsreboundsassists": "Pts+Rebs+Asts",
-        "pointsreboundsassist": "Pts+Rebs+Asts",  # Handle missing 's'
-        "pointsassists": "Pts+Asts",
-        "reboundsassists": "Rebs+Asts",
-        "threepointersmade": "3-PT Made",
-        "threepointfieldgoals": "3-PT Made",  # Additional match for variations
-        "threepointersattempted": "3-PT Attempted",
-        "fieldgoalsmade": "FG Made",
-        "fieldgoalsattempted": "FG Attempted",
-        "freethrowsmade": "Free Throws Made",
-        "freethrowsattempted": "Free Throws Attempted",
-        "defensiverebounds": "Defensive Rebounds",
-        "offensiverebounds": "Offensive Rebounds",
-        "rebounds": "Rebounds",
-        "assists": "Assists",
-        "steals": "Steals",
-        "blocks": "Blocked Shots",
-        "turnovers": "Turnovers",
-        "points": "Points",
-        "dunks": "Dunks",
-        "fantasyscore": "Fantasy Score",
-        "personalfouls": "Personal Fouls",
-        "twopointersattempted": "Two Pointers Attempted",
-        "pointscombo": "Points (Combo)",
-        "reboundscombo": "Rebounds (Combo)",
-        "assistscombo": "Assists (Combo)",
-        "threeptmadecombo": "3-PT Made (Combo)",
-        "doubledouble": "Double-Double",
-        "unknown": "unknown"
-    }
-
-    # Get the normalized replacement value, if any
-    normalized_stat = replacements.get(normalized_key, stat)
-
-    # Ensure that the result is in the correct case format
-    return normalized_stat
 
 
 def combine_dicts(*dicts):
@@ -103,7 +55,8 @@ def add_statline(session, book_id, player_name, matchup_id, prop_id, price, desi
 
 def export_data(combined, game_odds_dict, prop_info):
     now = datetime.now()
-    with SessionLocal() as session:
+    Session = get_session()
+    with Session() as session:
         try:
             book = Books(book_name="Pinnacle", book_type="Sports Book", scrape_timestamp=now)
             session.add(book)
