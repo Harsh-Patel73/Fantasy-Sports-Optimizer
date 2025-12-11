@@ -73,3 +73,65 @@ export async function fetchBooks() {
   const result = await fetchJSON(`${API_BASE}/books`);
   return result.data;
 }
+
+// Line Comparison API
+export async function fetchLineComparison(params = {}) {
+  const urlParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== null && value !== undefined && value !== '') {
+      urlParams.append(key, value);
+    }
+  });
+  return fetchJSON(`${API_BASE}/compare?${urlParams}`);
+}
+
+// Parlay Builder API
+export async function fetchEVLines(params = {}) {
+  const urlParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== null && value !== undefined && value !== '') {
+      urlParams.append(key, value);
+    }
+  });
+  return fetchJSON(`${API_BASE}/parlay/ev-lines?${urlParams}`);
+}
+
+export async function validateParlay(body) {
+  return fetchJSON(`${API_BASE}/parlay/validate`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function fetchParlayLines(params = {}) {
+  const urlParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== null && value !== undefined && value !== '') {
+      urlParams.append(key, value);
+    }
+  });
+  return fetchJSON(`${API_BASE}/parlay/lines?${urlParams}`);
+}
+
+export async function fetchParlayTypes() {
+  return fetchJSON(`${API_BASE}/parlay/types`);
+}
+
+// Calculator API
+export async function calculateDevig(body) {
+  return fetchJSON(`${API_BASE}/calculators/devig`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function calculateParlayOdds(body) {
+  return fetchJSON(`${API_BASE}/calculators/parlay-odds`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function fetchCalculatorParlayTypes() {
+  return fetchJSON(`${API_BASE}/calculators/parlay-types`);
+}

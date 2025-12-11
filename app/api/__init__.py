@@ -28,12 +28,18 @@ def create_app(config_class=None):
     ])
 
     # Register API blueprints
-    from app.api.routes import health_bp, lines_bp, discrepancies_bp, filters_bp
+    from app.api.routes import (
+        health_bp, lines_bp, discrepancies_bp, filters_bp,
+        comparison_bp, parlay_bp, calculators_bp
+    )
 
     app.register_blueprint(health_bp, url_prefix='/api')
     app.register_blueprint(lines_bp, url_prefix='/api')
     app.register_blueprint(discrepancies_bp, url_prefix='/api')
     app.register_blueprint(filters_bp, url_prefix='/api')
+    app.register_blueprint(comparison_bp, url_prefix='/api')
+    app.register_blueprint(parlay_bp, url_prefix='/api')
+    app.register_blueprint(calculators_bp, url_prefix='/api')
 
     # Serve React frontend (for production - single server deployment)
     @app.route('/')

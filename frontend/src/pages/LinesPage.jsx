@@ -40,8 +40,8 @@ function LinesPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">All Betting Lines</h1>
-        <p className="text-gray-600">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">All Betting Lines</h1>
+        <p className="text-gray-600 dark:text-gray-400">
           Browse and filter betting lines from Pinnacle and PrizePicks.
         </p>
       </div>
@@ -49,7 +49,7 @@ function LinesPage() {
       <FilterPanel />
 
       {error && (
-        <div className="card bg-red-50 border border-red-200 text-red-700 mb-6">
+        <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 mb-6">
           {error}
         </div>
       )}

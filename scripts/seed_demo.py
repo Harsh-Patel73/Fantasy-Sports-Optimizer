@@ -5,15 +5,20 @@ Uses fictional player names and team names to avoid licensing/ethical issues
 with displaying scraped data publicly.
 
 Usage:
-    python seed_demo_data.py
+    python scripts/seed_demo.py
 
 This will create/overwrite the demo/demo.db SQLite database.
 """
 import os
+import sys
 import random
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+
+# Add project root to path so we can import app modules
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 # Set demo mode before importing app modules
 os.environ['DEMO_MODE'] = 'true'
@@ -96,7 +101,8 @@ STAT_BASELINES = {
 
 def ensure_demo_dir():
     """Create the demo directory if it doesn't exist."""
-    demo_dir = Path(__file__).parent / 'demo'
+    # demo directory is at project root, not in scripts/
+    demo_dir = Path(__file__).parent.parent / 'demo'
     demo_dir.mkdir(exist_ok=True)
     return demo_dir
 
@@ -131,7 +137,22 @@ def generate_demo_data():
             book_type="Fantasy",
             scrape_timestamp=now
         )
-        session.add_all([pinnacle, prizepicks])
+        draftkings = Books(
+            book_name="DraftKings",
+            book_type="Sports Book",
+            scrape_timestamp=now
+        )
+        fanduel = Books(
+            book_name="FanDuel",
+            book_type="Sports Book",
+            scrape_timestamp=now
+        )
+        caesars = Books(
+            book_name="Caesars",
+            book_type="Sports Book",
+            scrape_timestamp=now
+        )
+        session.add_all([pinnacle, prizepicks, draftkings, fanduel, caesars])
         session.flush()
 
         # Create matchups (pair up teams)
@@ -214,6 +235,99 @@ def generate_demo_data():
                 ))
                 statline_count += 1
 
+                # DraftKings lines (with slight price/points variation from Pinnacle)
+                dk_price_over = pinnacle_price_over + Decimal(str(random.choice([-5, -3, 0, 3, 5])))
+                dk_price_under = Decimal(str(-220 - int(dk_price_over)))
+                dk_points = base_points + random.choice([-0.5, 0, 0, 0, 0.5])
+
+                session.add(Statlines(
+                    book_id=draftkings.book_id,
+                    player_name=player,
+                    matchup_id=matchup.matchup_id,
+                    prop_id=prop.prop_id,
+                    price=dk_price_over,
+                    points=Decimal(str(dk_points)),
+                    designation="Over",
+                    line_type="total",
+                    scrape_timestamp=now
+                ))
+                statline_count += 1
+
+                session.add(Statlines(
+                    book_id=draftkings.book_id,
+                    player_name=player,
+                    matchup_id=matchup.matchup_id,
+                    prop_id=prop.prop_id,
+                    price=dk_price_under,
+                    points=Decimal(str(dk_points)),
+                    designation="Under",
+                    line_type="total",
+                    scrape_timestamp=now
+                ))
+                statline_count += 1
+
+                # FanDuel lines (with slight price/points variation from Pinnacle)
+                fd_price_over = pinnacle_price_over + Decimal(str(random.choice([-5, -3, 0, 3, 5])))
+                fd_price_under = Decimal(str(-220 - int(fd_price_over)))
+                fd_points = base_points + random.choice([-0.5, 0, 0, 0, 0.5])
+
+                session.add(Statlines(
+                    book_id=fanduel.book_id,
+                    player_name=player,
+                    matchup_id=matchup.matchup_id,
+                    prop_id=prop.prop_id,
+                    price=fd_price_over,
+                    points=Decimal(str(fd_points)),
+                    designation="Over",
+                    line_type="total",
+                    scrape_timestamp=now
+                ))
+                statline_count += 1
+
+                session.add(Statlines(
+                    book_id=fanduel.book_id,
+                    player_name=player,
+                    matchup_id=matchup.matchup_id,
+                    prop_id=prop.prop_id,
+                    price=fd_price_under,
+                    points=Decimal(str(fd_points)),
+                    designation="Under",
+                    line_type="total",
+                    scrape_timestamp=now
+                ))
+                statline_count += 1
+
+                # Caesars lines (with slight price/points variation from Pinnacle)
+                cs_price_over = pinnacle_price_over + Decimal(str(random.choice([-5, -3, 0, 3, 5])))
+                cs_price_under = Decimal(str(-220 - int(cs_price_over)))
+                cs_points = base_points + random.choice([-0.5, 0, 0, 0, 0.5])
+
+                session.add(Statlines(
+                    book_id=caesars.book_id,
+                    player_name=player,
+                    matchup_id=matchup.matchup_id,
+                    prop_id=prop.prop_id,
+                    price=cs_price_over,
+                    points=Decimal(str(cs_points)),
+                    designation="Over",
+                    line_type="total",
+                    scrape_timestamp=now
+                ))
+                statline_count += 1
+
+                session.add(Statlines(
+                    book_id=caesars.book_id,
+                    player_name=player,
+                    matchup_id=matchup.matchup_id,
+                    prop_id=prop.prop_id,
+                    price=cs_price_under,
+                    points=Decimal(str(cs_points)),
+                    designation="Under",
+                    line_type="total",
+                    scrape_timestamp=now
+                ))
+                statline_count += 1
+
                 # PrizePicks line (with intentional variation for discrepancy demo)
                 # About 30% of lines will have notable discrepancies
                 if random.random() < 0.3:
@@ -239,7 +353,7 @@ def generate_demo_data():
 
         session.commit()
         print(f"\nDemo data generated successfully!")
-        print(f"  - Books: 2")
+        print(f"  - Books: 5 (Pinnacle, PrizePicks, DraftKings, FanDuel, Caesars)")
         print(f"  - Matchups: {len(matchups)}")
         print(f"  - Props: {len(props)}")
         print(f"  - Statlines: {statline_count}")

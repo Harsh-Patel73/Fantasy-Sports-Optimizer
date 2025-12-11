@@ -37,8 +37,8 @@ function DiscrepanciesPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Line Discrepancies</h1>
-        <p className="text-gray-600">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Line Discrepancies</h1>
+        <p className="text-gray-600 dark:text-gray-400">
           Find lines where Pinnacle and PrizePicks differ significantly.
         </p>
       </div>
@@ -46,14 +46,14 @@ function DiscrepanciesPage() {
       <FilterPanel showMinDiff />
 
       {data.meta && (
-        <div className="mb-4 text-sm text-gray-600">
+        <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
           Found <span className="font-semibold">{data.meta.count}</span> discrepancies
           with difference &ge; <span className="font-semibold">{data.meta.min_diff_applied}</span>
         </div>
       )}
 
       {error && (
-        <div className="card bg-red-50 border border-red-200 text-red-700 mb-6">
+        <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 mb-6">
           {error}
         </div>
       )}

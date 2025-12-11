@@ -35,9 +35,9 @@ function FilterPanel({ showMinDiff = false }) {
     return (
       <div className="card mb-6">
         <div className="animate-pulse flex space-x-4">
-          <div className="h-10 bg-gray-200 rounded flex-1"></div>
-          <div className="h-10 bg-gray-200 rounded flex-1"></div>
-          <div className="h-10 bg-gray-200 rounded flex-1"></div>
+          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
+          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
+          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
         </div>
       </div>
     );
@@ -48,7 +48,7 @@ function FilterPanel({ showMinDiff = false }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Book Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Sportsbook
           </label>
           <select
@@ -64,7 +64,7 @@ function FilterPanel({ showMinDiff = false }) {
 
         {/* Team Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Team
           </label>
           <select
@@ -83,7 +83,7 @@ function FilterPanel({ showMinDiff = false }) {
 
         {/* Player Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Player
           </label>
           <select
@@ -102,7 +102,7 @@ function FilterPanel({ showMinDiff = false }) {
 
         {/* Stat Type Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Stat Type
           </label>
           <select
@@ -122,7 +122,7 @@ function FilterPanel({ showMinDiff = false }) {
         {/* Min Diff Slider (only for discrepancies) */}
         {showMinDiff && (
           <div className="md:col-span-2 lg:col-span-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Minimum Difference: {filters.minDiff}
             </label>
             <input
@@ -132,9 +132,9 @@ function FilterPanel({ showMinDiff = false }) {
               step="0.5"
               value={filters.minDiff}
               onChange={(e) => setMinDiff(parseFloat(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
               <span>0</span>
               <span>5+</span>
             </div>

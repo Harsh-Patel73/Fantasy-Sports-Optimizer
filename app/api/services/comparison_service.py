@@ -6,6 +6,147 @@ from app.models.matchups import Matchups
 from app.models.props import Props
 
 
+def get_line_comparison(primary_book, team=None, player=None, stat_type=None):
+    """
+    Get side-by-side line comparison with a primary book.
+
+    Shows only lines where the same player+stat exists on multiple books.
+
+    Args:
+        primary_book: Name of the primary book to compare against (required)
+        team: Filter by team (partial match)
+        player: Filter by player name (partial match)
+        stat_type: Filter by stat type
+
+    Returns:
+        Dictionary with comparison data and metadata:
+        {
+            'data': [
+                {
+                    'player_name': 'Marcus Johnson',
+                    'stat_type': 'Points',
+                    'matchup': 'Team A @ Team B',
+                    'primary_line': {'book': 'PrizePicks', 'points': 25.5, 'price': None},
+                    'other_lines': [
+                        {'book': 'Pinnacle', 'points': 25.0, 'price': -110},
+                        {'book': 'DraftKings', 'points': 25.5, 'price': -115},
+                    ]
+                }
+            ],
+            'meta': {...}
+        }
+    """
+    Session = get_session()
+    session = Session()
+
+    try:
+        # Base query for all lines
+        def build_query(book_filter=None):
+            query = (
+                session.query(Statlines, Books, Matchups, Props)
+                .join(Books, Statlines.book_id == Books.book_id)
+                .join(Matchups, Statlines.matchup_id == Matchups.matchup_id)
+                .join(Props, Statlines.prop_id == Props.prop_id)
+            )
+
+            if book_filter:
+                query = query.filter(func.lower(Books.book_name) == book_filter.lower())
+
+            if stat_type:
+                query = query.filter(func.lower(Props.units) == stat_type.lower())
+
+            if player:
+                player_pattern = f"%{player.lower()}%"
+                query = query.filter(func.lower(Statlines.player_name).like(player_pattern))
+
+            if team:
+                team_pattern = f"%{team.lower()}%"
+                query = query.filter(
+                    (func.lower(Matchups.home_team).like(team_pattern)) |
+                    (func.lower(Matchups.away_team).like(team_pattern))
+                )
+
+            return query
+
+        # Get primary book lines
+        primary_lines = build_query(primary_book).all()
+
+        # Get all other books' lines
+        other_lines = build_query().filter(
+            func.lower(Books.book_name) != primary_book.lower()
+        ).all()
+
+        # Build lookup for other books: key -> list of lines from different books
+        other_lookup = {}
+        for statline, book, matchup, prop in other_lines:
+            if not statline.player_name or not prop.units:
+                continue
+
+            key = (statline.player_name.lower().strip(), prop.units.lower().strip())
+
+            if key not in other_lookup:
+                other_lookup[key] = []
+
+            other_lookup[key].append({
+                'book': book.book_name,
+                'points': float(statline.points) if statline.points else None,
+                'price': float(statline.price) if statline.price else None,
+                'designation': statline.designation,
+            })
+
+        # Build comparison results
+        comparisons = []
+        seen_keys = set()
+
+        for statline, book, matchup, prop in primary_lines:
+            if not statline.player_name or not prop.units:
+                continue
+
+            key = (statline.player_name.lower().strip(), prop.units.lower().strip())
+
+            # Skip if we've already processed this player+stat
+            if key in seen_keys:
+                continue
+
+            # Only include if there are matching lines on other books
+            if key not in other_lookup:
+                continue
+
+            seen_keys.add(key)
+
+            comparisons.append({
+                'player_name': statline.player_name,
+                'stat_type': prop.units,
+                'matchup': f"{matchup.away_team} @ {matchup.home_team}" if matchup.home_team else "Unknown",
+                'designation': statline.designation,
+                'primary_line': {
+                    'book': book.book_name,
+                    'points': float(statline.points) if statline.points else None,
+                    'price': float(statline.price) if statline.price else None,
+                },
+                'other_lines': other_lookup[key],
+            })
+
+        # Sort by player name
+        comparisons.sort(key=lambda x: x['player_name'])
+
+        return {
+            'data': comparisons,
+            'meta': {
+                'primary_book': primary_book,
+                'count': len(comparisons),
+                'filters': {
+                    'stat_type': stat_type,
+                    'player': player,
+                    'team': team
+                }
+            }
+        }
+
+    finally:
+        session.close()
+
+
 def find_discrepancies(min_diff=0.5, stat_type=None, player=None, team=None):
     """
     Find lines where Pinnacle and PrizePicks differ significantly.
