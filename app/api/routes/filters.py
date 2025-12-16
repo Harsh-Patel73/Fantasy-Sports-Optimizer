@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app.api.services.filter_service import (
+    get_unique_sports,
     get_unique_teams,
     get_unique_players,
     get_unique_stat_types,
@@ -9,10 +10,22 @@ from app.api.services.filter_service import (
 filters_bp = Blueprint('filters', __name__)
 
 
+@filters_bp.route('/filters/sports', methods=['GET'])
+def list_sports():
+    """Get all unique sports for filter dropdown."""
+    sports = get_unique_sports()
+    return jsonify({'data': sports})
+
+
 @filters_bp.route('/filters/teams', methods=['GET'])
 def list_teams():
-    """Get all unique team names for filter dropdown."""
-    teams = get_unique_teams()
+    """Get all unique team names for filter dropdown.
+
+    Query Parameters:
+        sport: Filter teams by sport (optional)
+    """
+    sport = request.args.get('sport')
+    teams = get_unique_teams(sport=sport)
     return jsonify({'data': teams})
 
 

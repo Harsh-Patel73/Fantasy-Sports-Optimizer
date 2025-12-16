@@ -1,5 +1,5 @@
 from app.models.base import Base
-from sqlalchemy import Column, Integer, String, DECIMAL, TIMESTAMP, ForeignKey
+from sqlalchemy import Column, Integer, String, DECIMAL, ForeignKey
 from sqlalchemy.orm import relationship
 
 class Statlines(Base):
@@ -14,7 +14,6 @@ class Statlines(Base):
     points = Column(DECIMAL(precision=10,scale=1))
     designation = Column(String(255))
     line_type = Column(String(255))
-    scrape_timestamp = Column(TIMESTAMP)
 
     prop = relationship("Props", back_populates="statlines")
     book = relationship("Books", back_populates ="statlines")

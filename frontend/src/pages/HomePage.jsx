@@ -2,6 +2,23 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchHealth, fetchDiscrepancies } from '../api/client';
 
+// Format stat types: "Player_Steals" -> "Player Steals"
+const formatStatType = (stat) => {
+  if (!stat) return '';
+  return stat.replace(/_/g, ' ');
+};
+
+// Format timestamp for display
+const formatLastSync = (isoString) => {
+  if (!isoString) return 'Never';
+  try {
+    const date = new Date(isoString);
+    return date.toLocaleString();
+  } catch {
+    return 'Unknown';
+  }
+};
+
 function HomePage() {
   const [health, setHealth] = useState(null);
   const [topDiscrepancies, setTopDiscrepancies] = useState([]);
@@ -42,6 +59,13 @@ function HomePage() {
 
   return (
     <div className="space-y-8">
+      {/* Last Sync Info */}
+      {health && (
+        <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+          Last data update: <span className="font-medium">{formatLastSync(health.last_sync)}</span>
+        </div>
+      )}
+
       {/* Hero Section */}
       <div className="card bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <h1 className="text-3xl font-bold mb-2">Get started now</h1>
@@ -73,7 +97,7 @@ function HomePage() {
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <div>
                   <p className="font-medium text-gray-900 dark:text-gray-100">{disc.player_name}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{disc.stat_type} O {disc.book1_line} - {disc.matchup}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{formatStatType(disc.stat_type)} Over {disc.book1_line} - {disc.matchup}</p>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center space-x-2">

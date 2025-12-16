@@ -1,3 +1,9 @@
+// Format stat types: "Player_Steals" -> "Player Steals"
+const formatStatType = (stat) => {
+  if (!stat) return '';
+  return stat.replace(/_/g, ' ');
+};
+
 function DiscrepancyTable({ discrepancies, loading }) {
   if (loading) {
     return (
@@ -50,13 +56,13 @@ function DiscrepancyTable({ discrepancies, loading }) {
           {discrepancies.map((disc, index) => (
             <tr key={index}>
               <td className="font-medium text-gray-900 dark:text-gray-100">{disc.player_name}</td>
-              <td className="text-gray-600 dark:text-gray-400">{disc.stat_type}</td>
+              <td className="text-gray-600 dark:text-gray-400">{formatStatType(disc.stat_type)}</td>
               <td className="text-gray-600 dark:text-gray-400">{disc.matchup}</td>
               <td>
                 <div className="flex flex-col">
                   <span className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{disc.book1_name}</span>
                   <span className="font-mono bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-300 px-2 py-0.5 rounded inline-block">
-                    O {disc.book1_line} ({formatOdds(disc.book1_odds)})
+                    Over {disc.book1_line} ({formatOdds(disc.book1_odds)})
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {disc.book1_implied}% implied
@@ -67,7 +73,7 @@ function DiscrepancyTable({ discrepancies, loading }) {
                 <div className="flex flex-col">
                   <span className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{disc.book2_name}</span>
                   <span className="font-mono bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded inline-block">
-                    O {disc.book2_line} ({formatOdds(disc.book2_odds)})
+                    Over {disc.book2_line} ({formatOdds(disc.book2_odds)})
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {disc.book2_implied}% implied

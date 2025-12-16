@@ -4,9 +4,28 @@ const BOOK_COLORS = {
   'DraftKings': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
   'FanDuel': 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300',
   'Caesars': 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+  'BetMGM': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
+  'Bovada': 'bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300',
+  'Fliff': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300',
+  'Hard Rock Bet': 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
+  'BetRivers': 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300',
 };
 
-function ComparisonTable({ data, loading }) {
+// Format stat types: "Player_Steals" -> "Player Steals"
+const formatStatType = (stat) => {
+  if (!stat) return '';
+  return stat.replace(/_/g, ' ');
+};
+
+// Format designation: "O" -> "Over", "U" -> "Under"
+const formatDesignation = (designation) => {
+  if (!designation) return 'Over';
+  if (designation === 'O' || designation.toLowerCase() === 'over') return 'Over';
+  if (designation === 'U' || designation.toLowerCase() === 'under') return 'Under';
+  return designation;
+};
+
+function ComparisonTable({ data, loading, selectedBooks }) {
   if (loading) {
     return (
       <div className="card">
@@ -39,6 +58,75 @@ function ComparisonTable({ data, loading }) {
     return BOOK_COLORS[bookName] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
   };
 
+  // When specific books are selected, show them as columns
+  const showColumnarView = selectedBooks && selectedBooks.length >= 2 && selectedBooks.length <= 5;
+
+  if (showColumnarView) {
+    return (
+      <div className="card table-container">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Stat Type</th>
+              <th>Matchup</th>
+              {selectedBooks.map(book => (
+                <th key={book} className="text-center">
+                  <span className={`inline-block px-2 py-1 rounded text-xs ${getBookColor(book)}`}>
+                    {book}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            {data.map((row, index) => {
+              // Create a map of book -> line for quick lookup
+              const linesByBook = {};
+              row.lines.forEach(line => {
+                linesByBook[line.book] = line;
+              });
+
+              return (
+                <tr key={index}>
+                  <td className="font-medium text-gray-900 dark:text-gray-100">{row.player_name}</td>
+                  <td className="text-gray-600 dark:text-gray-400">{formatStatType(row.stat_type)}</td>
+                  <td className="text-gray-600 dark:text-gray-400 text-sm">{row.matchup}</td>
+                  {selectedBooks.map(book => {
+                    const line = linesByBook[book];
+                    if (!line) {
+                      return (
+                        <td key={book} className="text-center text-gray-400 dark:text-gray-500">
+                          —
+                        </td>
+                      );
+                    }
+                    const isFantasyApp = line.book_type === 'Fantasy';
+                    return (
+                      <td key={book} className="text-center">
+                        <div className="flex flex-col items-center">
+                          <span className="font-mono font-medium text-gray-900 dark:text-gray-100">
+                            {formatDesignation(line.designation)} {line.points}
+                          </span>
+                          {!isFantasyApp && line.price !== null && (
+                            <span className={`text-sm font-bold ${line.price > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                              {formatOdds(line.price)}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  // Default view: lines wrapped in badges
   return (
     <div className="card table-container">
       <table className="data-table">
@@ -54,7 +142,7 @@ function ComparisonTable({ data, loading }) {
           {data.map((row, index) => (
             <tr key={index}>
               <td className="font-medium text-gray-900 dark:text-gray-100">{row.player_name}</td>
-              <td className="text-gray-600 dark:text-gray-400">{row.stat_type}</td>
+              <td className="text-gray-600 dark:text-gray-400">{formatStatType(row.stat_type)}</td>
               <td className="text-gray-600 dark:text-gray-400 text-sm">{row.matchup}</td>
               <td>
                 <div className="flex flex-wrap gap-2">
@@ -66,7 +154,7 @@ function ComparisonTable({ data, loading }) {
                         className={`inline-flex items-center px-2 py-1 rounded text-sm ${getBookColor(line.book)}`}
                       >
                         <span className="font-medium mr-1">{line.book}:</span>
-                        <span className="font-mono">Over {line.points}</span>
+                        <span className="font-mono">{formatDesignation(line.designation)} {line.points}</span>
                         {!isFantasyApp && line.price !== null && (
                           <span className="ml-1 font-bold">
                             ({formatOdds(line.price)})

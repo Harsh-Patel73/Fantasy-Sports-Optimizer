@@ -1,5 +1,5 @@
 from app.models.base import Base
-from sqlalchemy import Column, Integer, String, DECIMAL, TIMESTAMP
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 
 class Props(Base):
@@ -9,6 +9,5 @@ class Props(Base):
     category = Column(String(255))
     units = Column(String(255))
     description = Column(String(255))
-    scrape_timestamp = Column(TIMESTAMP)
 
     statlines = relationship("Statlines", back_populates="prop")

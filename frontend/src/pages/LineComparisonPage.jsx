@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useFilters } from '../context/FilterContext';
 import { fetchLineComparison } from '../api/client';
 import ComparisonTable from '../components/Comparison/ComparisonTable';
@@ -34,6 +34,22 @@ function LineComparisonPage() {
     loadComparison();
   }, [filters.books, filters.team, filters.player, filters.statType]);
 
+  // Apply client-side search filtering
+  const filteredData = useMemo(() => {
+    if (!filters.search || !data.data) return data.data;
+
+    const searchLower = filters.search.toLowerCase();
+    return data.data.filter(row =>
+      row.player_name?.toLowerCase().includes(searchLower) ||
+      row.stat_type?.toLowerCase().includes(searchLower) ||
+      row.matchup?.toLowerCase().includes(searchLower) ||
+      row.lines?.some(line => line.book?.toLowerCase().includes(searchLower))
+    );
+  }, [data.data, filters.search]);
+
+  // Get selected books for column display
+  const selectedBooks = filters.books && filters.books.length > 0 ? filters.books : null;
+
   return (
     <div>
       <div className="mb-6">
@@ -43,7 +59,7 @@ function LineComparisonPage() {
         </p>
       </div>
 
-      <FilterPanel />
+      <FilterPanel showSearch={true} />
 
       {error && (
         <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 mb-6">
@@ -53,13 +69,15 @@ function LineComparisonPage() {
 
       {data.meta && !loading && (
         <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-          Found <span className="font-semibold">{data.meta.count}</span> player props across books
+          Found <span className="font-semibold">{filteredData.length}</span> player props across books
+          {filters.search && ` (filtered from ${data.meta.count})`}
         </div>
       )}
 
       <ComparisonTable
-        data={data.data}
+        data={filteredData}
         loading={loading}
+        selectedBooks={selectedBooks}
       />
     </div>
   );

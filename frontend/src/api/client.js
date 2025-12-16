@@ -54,8 +54,19 @@ export async function fetchDiscrepancies(filters = {}) {
   return fetchJSON(url);
 }
 
-export async function fetchTeams() {
-  const result = await fetchJSON(`${API_BASE}/filters/teams`);
+export async function fetchSports() {
+  const result = await fetchJSON(`${API_BASE}/filters/sports`);
+  return result.data;
+}
+
+export async function fetchTeams(sport = null) {
+  const params = new URLSearchParams();
+  if (sport) {
+    params.append('sport', sport);
+  }
+  const queryString = params.toString();
+  const url = queryString ? `${API_BASE}/filters/teams?${queryString}` : `${API_BASE}/filters/teams`;
+  const result = await fetchJSON(url);
   return result.data;
 }
 

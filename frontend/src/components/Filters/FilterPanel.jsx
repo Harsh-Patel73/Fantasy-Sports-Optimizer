@@ -1,27 +1,35 @@
 import { useState, useEffect } from 'react';
 import { useFilters } from '../../context/FilterContext';
-import { fetchTeams, fetchPlayers, fetchStatTypes, fetchBooks } from '../../api/client';
+import { fetchSports, fetchTeams, fetchPlayers, fetchStatTypes, fetchBooks } from '../../api/client';
 
-function FilterPanel({ showMinProbDiff = false }) {
-  const { filters, setBooks, setTeam, setPlayer, setStatType, setMinProbDiff, resetFilters } = useFilters();
+// Format stat types: "Player_Steals" -> "Player Steals"
+const formatStatType = (stat) => {
+  if (!stat) return '';
+  return stat.replace(/_/g, ' ');
+};
+
+function FilterPanel({ showMinProbDiff = false, showSearch = false }) {
+  const { filters, setBooks, setSport, setTeam, setPlayer, setStatType, setSearch, setMinProbDiff, resetFilters } = useFilters();
 
   const [availableBooks, setAvailableBooks] = useState([]);
+  const [sports, setSports] = useState([]);
   const [teams, setTeams] = useState([]);
   const [players, setPlayers] = useState([]);
   const [statTypes, setStatTypes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
 
-  // Load initial filter options (books, teams, stat types)
+  // Load initial filter options (books, sports, stat types)
   useEffect(() => {
     async function loadFilterOptions() {
       try {
-        const [booksData, teamsData, statTypesData] = await Promise.all([
+        const [booksData, sportsData, statTypesData] = await Promise.all([
           fetchBooks(),
-          fetchTeams(),
+          fetchSports(),
           fetchStatTypes(),
         ]);
         setAvailableBooks(booksData);
-        setTeams(teamsData);
+        setSports(sportsData);
         setStatTypes(statTypesData);
       } catch (error) {
         console.error('Failed to load filter options:', error);
@@ -32,6 +40,20 @@ function FilterPanel({ showMinProbDiff = false }) {
 
     loadFilterOptions();
   }, []);
+
+  // Load teams when sport changes
+  useEffect(() => {
+    async function loadTeams() {
+      try {
+        const teamsData = await fetchTeams(filters.sport || null);
+        setTeams(teamsData);
+      } catch (error) {
+        console.error('Failed to load teams:', error);
+      }
+    }
+
+    loadTeams();
+  }, [filters.sport]);
 
   // Load players when team changes
   useEffect(() => {
@@ -47,6 +69,14 @@ function FilterPanel({ showMinProbDiff = false }) {
     loadPlayers();
   }, [filters.team]);
 
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput, setSearch]);
+
   const handleBookToggle = (bookName) => {
     const currentBooks = filters.books || [];
     if (currentBooks.includes(bookName)) {
@@ -57,11 +87,11 @@ function FilterPanel({ showMinProbDiff = false }) {
   };
 
   const selectAllBooks = () => {
-    setBooks([]);  // Empty array means all books
+    setBooks(availableBooks.map(b => b.name));  // Select all books explicitly
   };
 
   const clearAllBooks = () => {
-    setBooks(availableBooks.map(b => b.name));  // Select all books explicitly
+    setBooks([]);  // Empty array means no books selected
   };
 
   if (loading) {
@@ -76,10 +106,27 @@ function FilterPanel({ showMinProbDiff = false }) {
     );
   }
 
-  const isAllBooksSelected = !filters.books || filters.books.length === 0;
+  const isAllBooksSelected = filters.books.length === availableBooks.length && availableBooks.length > 0;
+  const isNoBooksSelected = !filters.books || filters.books.length === 0;
 
   return (
     <div className="card mb-6">
+      {/* Search Bar */}
+      {showSearch && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Search
+          </label>
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search players, teams, stats..."
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Book Filter - Multi-select */}
         <div className="md:col-span-2 lg:col-span-4">
@@ -106,7 +153,7 @@ function FilterPanel({ showMinProbDiff = false }) {
           </div>
           <div className="flex flex-wrap gap-2">
             {availableBooks.map((book) => {
-              const isSelected = isAllBooksSelected || filters.books.includes(book.name);
+              const isSelected = filters.books.includes(book.name);
               return (
                 <button
                   key={book.name}
@@ -123,6 +170,25 @@ function FilterPanel({ showMinProbDiff = false }) {
               );
             })}
           </div>
+        </div>
+
+        {/* League Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            League
+          </label>
+          <select
+            value={filters.sport}
+            onChange={(e) => setSport(e.target.value)}
+            className="select-field"
+          >
+            <option value="">All Leagues</option>
+            {sports.map((sport) => (
+              <option key={sport} value={sport}>
+                {sport}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Team Filter */}
@@ -176,7 +242,7 @@ function FilterPanel({ showMinProbDiff = false }) {
             <option value="">All Stats</option>
             {statTypes.map((stat) => (
               <option key={stat} value={stat}>
-                {stat}
+                {formatStatType(stat)}
               </option>
             ))}
           </select>
@@ -190,16 +256,16 @@ function FilterPanel({ showMinProbDiff = false }) {
             </label>
             <input
               type="range"
-              min="0"
-              max="20"
-              step="1"
+              min="5"
+              max="30"
+              step="2.5"
               value={filters.minProbDiff}
-              onChange={(e) => setMinProbDiff(parseInt(e.target.value))}
+              onChange={(e) => setMinProbDiff(parseFloat(e.target.value))}
               className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
             />
             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-              <span>0%</span>
-              <span>20%</span>
+              <span>5%</span>
+              <span>30%</span>
             </div>
           </div>
         )}

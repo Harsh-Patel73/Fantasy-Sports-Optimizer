@@ -265,7 +265,7 @@ def american_to_implied_prob(odds):
         return abs(odds) / (abs(odds) + 100)
 
 
-def find_discrepancies(min_prob_diff=5, stat_type=None, player=None, team=None):
+def find_discrepancies(min_prob_diff=5, stat_type=None, player=None, team=None, books=None):
     """
     Find lines where sportsbooks have significant odds differences.
 
@@ -284,6 +284,7 @@ def find_discrepancies(min_prob_diff=5, stat_type=None, player=None, team=None):
         stat_type: Filter by stat type
         player: Filter by player name (partial match)
         team: Filter by team (partial match)
+        books: List of book names to include (optional)
 
     Returns:
         Dictionary with discrepancy data and metadata
@@ -300,6 +301,10 @@ def find_discrepancies(min_prob_diff=5, stat_type=None, player=None, team=None):
             .join(Props, Statlines.prop_id == Props.prop_id)
             .filter(Books.book_type == "Sports Book")
         )
+
+        # Apply books filter
+        if books and len(books) > 0:
+            query = query.filter(Books.book_name.in_(books))
 
         # Apply filters
         if stat_type:

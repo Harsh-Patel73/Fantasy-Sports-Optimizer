@@ -16,15 +16,10 @@ python main.py --no-fetch   # Start server only (skip data fetch, use existing d
 python main.py --fetch-only # Fetch data only (no server)
 ```
 
-### Demo Mode (SQLite, no MySQL required)
+### Quick Start (SQLite database included)
 
 ```bash
-# Windows
-set DEMO_MODE=true
-python main.py --no-fetch
-
-# Mac/Linux
-DEMO_MODE=true python main.py --no-fetch
+python main.py --no-fetch   # Uses existing demo data in demo/demo.db
 ```
 
 ### Frontend Development (hot reload)
@@ -84,12 +79,9 @@ python scripts/seed_demo.py
 ## Configuration
 
 Environment variables in `.env`:
-- `DEMO_MODE` - `true` for SQLite demo, `false` for MySQL production
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` - MySQL connection (production only)
+- `DEMO_MODE` - `true` (default) uses SQLite at `demo/demo.db`
 - `SECRET_KEY` - Flask secret key
-- `ODDS_API_KEY` - API key for The Odds API
-
-Config selection in `config.py`: `get_config()` returns `DemoConfig` or `ProductionConfig` based on `DEMO_MODE`.
+- `ODDS_API_KEY` - API key for The Odds API (for fetching fresh data)
 
 ## API Endpoints
 

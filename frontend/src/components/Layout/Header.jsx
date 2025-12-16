@@ -18,16 +18,6 @@ function Header() {
           <div className="flex items-center space-x-2">
             <nav className="flex space-x-1 md:space-x-2">
               <Link
-                to="/"
-                className={`px-2 md:px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive('/')
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700'
-                }`}
-              >
-                Home
-              </Link>
-              <Link
                 to="/compare"
                 className={`px-2 md:px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive('/compare')
@@ -38,14 +28,14 @@ function Header() {
                 Compare Lines
               </Link>
               <Link
-                to="/parlay"
+                to="/discrepancies"
                 className={`px-2 md:px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive('/parlay')
+                  isActive('/discrepancies')
                     ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700'
                 }`}
               >
-                Parlay Builder
+                Discrepancies
               </Link>
               <Link
                 to="/calculators"
@@ -58,14 +48,14 @@ function Header() {
                 Calculators
               </Link>
               <Link
-                to="/discrepancies"
+                to="/parlay"
                 className={`px-2 md:px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive('/discrepancies')
+                  isActive('/parlay')
                     ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700'
                 }`}
               >
-                Discrepancies
+                Parlay Builder
               </Link>
             </nav>
 
