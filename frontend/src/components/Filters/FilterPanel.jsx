@@ -1,25 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useFilters } from '../../context/FilterContext';
-import { fetchTeams, fetchPlayers, fetchStatTypes } from '../../api/client';
+import { fetchTeams, fetchPlayers, fetchStatTypes, fetchBooks } from '../../api/client';
 
-function FilterPanel({ showMinDiff = false }) {
-  const { filters, setBook, setTeam, setPlayer, setStatType, setMinDiff, resetFilters } = useFilters();
+function FilterPanel({ showMinProbDiff = false }) {
+  const { filters, setBooks, setTeam, setPlayer, setStatType, setMinProbDiff, resetFilters } = useFilters();
 
+  const [availableBooks, setAvailableBooks] = useState([]);
   const [teams, setTeams] = useState([]);
   const [players, setPlayers] = useState([]);
   const [statTypes, setStatTypes] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Load initial filter options (books, teams, stat types)
   useEffect(() => {
     async function loadFilterOptions() {
       try {
-        const [teamsData, playersData, statTypesData] = await Promise.all([
+        const [booksData, teamsData, statTypesData] = await Promise.all([
+          fetchBooks(),
           fetchTeams(),
-          fetchPlayers(),
           fetchStatTypes(),
         ]);
+        setAvailableBooks(booksData);
         setTeams(teamsData);
-        setPlayers(playersData);
         setStatTypes(statTypesData);
       } catch (error) {
         console.error('Failed to load filter options:', error);
@@ -30,6 +32,37 @@ function FilterPanel({ showMinDiff = false }) {
 
     loadFilterOptions();
   }, []);
+
+  // Load players when team changes
+  useEffect(() => {
+    async function loadPlayers() {
+      try {
+        const playersData = await fetchPlayers(filters.team || null);
+        setPlayers(playersData);
+      } catch (error) {
+        console.error('Failed to load players:', error);
+      }
+    }
+
+    loadPlayers();
+  }, [filters.team]);
+
+  const handleBookToggle = (bookName) => {
+    const currentBooks = filters.books || [];
+    if (currentBooks.includes(bookName)) {
+      setBooks(currentBooks.filter(b => b !== bookName));
+    } else {
+      setBooks([...currentBooks, bookName]);
+    }
+  };
+
+  const selectAllBooks = () => {
+    setBooks([]);  // Empty array means all books
+  };
+
+  const clearAllBooks = () => {
+    setBooks(availableBooks.map(b => b.name));  // Select all books explicitly
+  };
 
   if (loading) {
     return (
@@ -43,23 +76,53 @@ function FilterPanel({ showMinDiff = false }) {
     );
   }
 
+  const isAllBooksSelected = !filters.books || filters.books.length === 0;
+
   return (
     <div className="card mb-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Book Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Sportsbook
-          </label>
-          <select
-            value={filters.book}
-            onChange={(e) => setBook(e.target.value)}
-            className="select-field"
-          >
-            <option value="all">All Books</option>
-            <option value="pinnacle">Pinnacle</option>
-            <option value="prizepicks">PrizePicks</option>
-          </select>
+        {/* Book Filter - Multi-select */}
+        <div className="md:col-span-2 lg:col-span-4">
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Sportsbooks
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={selectAllBooks}
+                className={`text-xs px-2 py-1 rounded ${isAllBooksSelected ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={clearAllBooks}
+                className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {availableBooks.map((book) => {
+              const isSelected = isAllBooksSelected || filters.books.includes(book.name);
+              return (
+                <button
+                  key={book.name}
+                  type="button"
+                  onClick={() => handleBookToggle(book.name)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    isSelected
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {book.name}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Team Filter */}
@@ -119,24 +182,24 @@ function FilterPanel({ showMinDiff = false }) {
           </select>
         </div>
 
-        {/* Min Diff Slider (only for discrepancies) */}
-        {showMinDiff && (
+        {/* Min Probability Diff Slider (only for discrepancies) */}
+        {showMinProbDiff && (
           <div className="md:col-span-2 lg:col-span-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Minimum Difference: {filters.minDiff}
+              Minimum Odds Difference: {filters.minProbDiff}%
             </label>
             <input
               type="range"
               min="0"
-              max="5"
-              step="0.5"
-              value={filters.minDiff}
-              onChange={(e) => setMinDiff(parseFloat(e.target.value))}
+              max="20"
+              step="1"
+              value={filters.minProbDiff}
+              onChange={(e) => setMinProbDiff(parseInt(e.target.value))}
               className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
             />
             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-              <span>0</span>
-              <span>5+</span>
+              <span>0%</span>
+              <span>20%</span>
             </div>
           </div>
         )}

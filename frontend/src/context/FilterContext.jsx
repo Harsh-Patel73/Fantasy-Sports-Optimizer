@@ -3,27 +3,28 @@ import { createContext, useContext, useReducer } from 'react';
 const FilterContext = createContext();
 
 const initialState = {
-  book: 'all',
+  books: [],  // Empty array means "all books"
   team: '',
   player: '',
   statType: '',
-  minDiff: 0.5,
+  minProbDiff: 5,
   page: 1,
   perPage: 50,
 };
 
 function filterReducer(state, action) {
   switch (action.type) {
-    case 'SET_BOOK':
-      return { ...state, book: action.payload, page: 1 };
+    case 'SET_BOOKS':
+      return { ...state, books: action.payload, page: 1 };
     case 'SET_TEAM':
-      return { ...state, team: action.payload, page: 1 };
+      // Clear player when team changes
+      return { ...state, team: action.payload, player: '', page: 1 };
     case 'SET_PLAYER':
       return { ...state, player: action.payload, page: 1 };
     case 'SET_STAT_TYPE':
       return { ...state, statType: action.payload, page: 1 };
-    case 'SET_MIN_DIFF':
-      return { ...state, minDiff: action.payload };
+    case 'SET_MIN_PROB_DIFF':
+      return { ...state, minProbDiff: action.payload };
     case 'SET_PAGE':
       return { ...state, page: action.payload };
     case 'SET_PER_PAGE':
@@ -38,11 +39,11 @@ function filterReducer(state, action) {
 export function FilterProvider({ children }) {
   const [filters, dispatch] = useReducer(filterReducer, initialState);
 
-  const setBook = (book) => dispatch({ type: 'SET_BOOK', payload: book });
+  const setBooks = (books) => dispatch({ type: 'SET_BOOKS', payload: books });
   const setTeam = (team) => dispatch({ type: 'SET_TEAM', payload: team });
   const setPlayer = (player) => dispatch({ type: 'SET_PLAYER', payload: player });
   const setStatType = (statType) => dispatch({ type: 'SET_STAT_TYPE', payload: statType });
-  const setMinDiff = (minDiff) => dispatch({ type: 'SET_MIN_DIFF', payload: minDiff });
+  const setMinProbDiff = (minProbDiff) => dispatch({ type: 'SET_MIN_PROB_DIFF', payload: minProbDiff });
   const setPage = (page) => dispatch({ type: 'SET_PAGE', payload: page });
   const setPerPage = (perPage) => dispatch({ type: 'SET_PER_PAGE', payload: perPage });
   const resetFilters = () => dispatch({ type: 'RESET' });
@@ -51,11 +52,11 @@ export function FilterProvider({ children }) {
     <FilterContext.Provider
       value={{
         filters,
-        setBook,
+        setBooks,
         setTeam,
         setPlayer,
         setStatType,
-        setMinDiff,
+        setMinProbDiff,
         setPage,
         setPerPage,
         resetFilters,

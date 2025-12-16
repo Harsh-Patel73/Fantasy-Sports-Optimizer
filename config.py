@@ -16,6 +16,12 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # The Odds API Configuration
+    ODDS_API_KEY = os.environ.get('ODDS_API_KEY', '')
+    ODDS_API_BASE_URL = 'https://api.the-odds-api.com/v4'
+    ODDS_API_REGIONS = 'us,us2'  # US regions for American odds
+    ODDS_API_ODDS_FORMAT = 'american'
+
 
 class ProductionConfig(Config):
     """Production configuration using MySQL."""

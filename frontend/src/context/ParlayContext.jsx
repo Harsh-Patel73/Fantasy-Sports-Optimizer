@@ -3,8 +3,8 @@ import { createContext, useContext, useReducer } from 'react';
 const ParlayContext = createContext();
 
 const initialState = {
-  bettingBook: 'PrizePicks',
-  sharpBooks: ['Pinnacle'],
+  bettingBook: 'DraftKings',
+  sharpBooks: ['Pinnacle', 'Bovada'],
   parlayType: '5-pick-flex',
   selectedLines: [],
   mode: 'auto', // 'auto' or 'manual'

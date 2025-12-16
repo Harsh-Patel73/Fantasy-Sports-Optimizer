@@ -37,16 +37,27 @@ def get_unique_teams():
         session.close()
 
 
-def get_unique_players():
-    """Get all unique player names from statlines."""
+def get_unique_players(team=None):
+    """Get all unique player names from statlines, optionally filtered by team."""
     Session = get_session()
     session = Session()
 
     try:
-        players = session.query(distinct(Statlines.player_name)).filter(
+        query = session.query(distinct(Statlines.player_name)).filter(
             Statlines.player_name.isnot(None)
-        ).order_by(Statlines.player_name).all()
+        )
 
+        # Filter by team if provided
+        if team:
+            from sqlalchemy import or_
+            query = query.join(Matchups, Statlines.matchup_id == Matchups.matchup_id).filter(
+                or_(
+                    Matchups.home_team == team,
+                    Matchups.away_team == team
+                )
+            )
+
+        players = query.order_by(Statlines.player_name).all()
         return [player for (player,) in players if player]
 
     finally:

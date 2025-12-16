@@ -7,12 +7,17 @@ function HomePage() {
   const [topDiscrepancies, setTopDiscrepancies] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const formatOdds = (odds) => {
+    if (odds === null || odds === undefined) return '—';
+    return odds > 0 ? `+${odds}` : odds;
+  };
+
   useEffect(() => {
     async function loadData() {
       try {
         const [healthData, discData] = await Promise.all([
           fetchHealth(),
-          fetchDiscrepancies({ min_diff: 1 }),
+          fetchDiscrepancies({ min_prob_diff: 5 }),
         ]);
         setHealth(healthData);
         setTopDiscrepancies(discData.data.slice(0, 5));
@@ -68,16 +73,20 @@ function HomePage() {
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <div>
                   <p className="font-medium text-gray-900 dark:text-gray-100">{disc.player_name}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{disc.stat_type} - {disc.matchup}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{disc.stat_type} O {disc.book1_line} - {disc.matchup}</p>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center space-x-2">
-                    <span className="text-blue-600 dark:text-blue-400 font-mono">{disc.pinnacle_line}</span>
+                    <span className="text-green-600 dark:text-green-400 font-mono text-sm">
+                      {disc.book1_name} {formatOdds(disc.book1_odds)}
+                    </span>
                     <span className="text-gray-400 dark:text-gray-500">vs</span>
-                    <span className="text-purple-600 dark:text-purple-400 font-mono">{disc.prizepicks_line}</span>
+                    <span className="text-gray-600 dark:text-gray-400 font-mono text-sm">
+                      {disc.book2_name} {formatOdds(disc.book2_odds)}
+                    </span>
                   </div>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300">
-                    {disc.difference} diff
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
+                    {disc.prob_difference}% edge
                   </span>
                 </div>
               </div>

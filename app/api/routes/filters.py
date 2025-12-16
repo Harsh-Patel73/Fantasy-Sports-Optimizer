@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from app.api.services.filter_service import (
     get_unique_teams,
     get_unique_players,
@@ -18,8 +18,13 @@ def list_teams():
 
 @filters_bp.route('/filters/players', methods=['GET'])
 def list_players():
-    """Get all unique player names for filter dropdown."""
-    players = get_unique_players()
+    """Get all unique player names for filter dropdown.
+
+    Query Parameters:
+        team: Filter players by team (optional)
+    """
+    team = request.args.get('team')
+    players = get_unique_players(team=team)
     return jsonify({'data': players})
 
 

@@ -59,8 +59,14 @@ export async function fetchTeams() {
   return result.data;
 }
 
-export async function fetchPlayers() {
-  const result = await fetchJSON(`${API_BASE}/filters/players`);
+export async function fetchPlayers(team = null) {
+  const params = new URLSearchParams();
+  if (team) {
+    params.append('team', team);
+  }
+  const queryString = params.toString();
+  const url = queryString ? `${API_BASE}/filters/players?${queryString}` : `${API_BASE}/filters/players`;
+  const result = await fetchJSON(url);
   return result.data;
 }
 

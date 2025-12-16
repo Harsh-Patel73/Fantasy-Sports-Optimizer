@@ -16,16 +16,21 @@ function DiscrepancyTable({ discrepancies, loading }) {
       <div className="card text-center py-12">
         <p className="text-gray-500 dark:text-gray-400">No discrepancies found.</p>
         <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
-          Try lowering the minimum difference threshold or adjusting filters.
+          Try lowering the minimum odds difference threshold or adjusting filters.
         </p>
       </div>
     );
   }
 
-  const getDiffClass = (diff) => {
-    if (diff >= 2) return 'diff-high';
-    if (diff >= 1) return 'diff-medium';
+  const getProbDiffClass = (probDiff) => {
+    if (probDiff >= 15) return 'diff-high';
+    if (probDiff >= 10) return 'diff-medium';
     return 'diff-low';
+  };
+
+  const formatOdds = (odds) => {
+    if (odds === null || odds === undefined) return '—';
+    return odds > 0 ? `+${odds}` : odds;
   };
 
   return (
@@ -36,10 +41,9 @@ function DiscrepancyTable({ discrepancies, loading }) {
             <th>Player</th>
             <th>Stat</th>
             <th>Matchup</th>
-            <th>Pinnacle</th>
-            <th>PrizePicks</th>
-            <th>Difference</th>
-            <th>Higher</th>
+            <th>Best Odds</th>
+            <th>Comparison</th>
+            <th>Edge</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -48,31 +52,37 @@ function DiscrepancyTable({ discrepancies, loading }) {
               <td className="font-medium text-gray-900 dark:text-gray-100">{disc.player_name}</td>
               <td className="text-gray-600 dark:text-gray-400">{disc.stat_type}</td>
               <td className="text-gray-600 dark:text-gray-400">{disc.matchup}</td>
-              <td className="font-mono">
-                <span className="bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 px-2 py-0.5 rounded">
-                  {disc.pinnacle_line}
-                </span>
-              </td>
-              <td className="font-mono">
-                <span className="bg-purple-50 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 px-2 py-0.5 rounded">
-                  {disc.prizepicks_line}
-                </span>
+              <td>
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{disc.book1_name}</span>
+                  <span className="font-mono bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-300 px-2 py-0.5 rounded inline-block">
+                    O {disc.book1_line} ({formatOdds(disc.book1_odds)})
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {disc.book1_implied}% implied
+                  </span>
+                </div>
               </td>
               <td>
-                <span className={`px-2 py-0.5 rounded font-medium ${getDiffClass(disc.difference)}`}>
-                  {disc.difference} ({disc.percent_diff}%)
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{disc.book2_name}</span>
+                  <span className="font-mono bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded inline-block">
+                    O {disc.book2_line} ({formatOdds(disc.book2_odds)})
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {disc.book2_implied}% implied
+                  </span>
+                </div>
               </td>
               <td>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                    disc.higher_book === 'Pinnacle'
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300'
-                      : 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300'
-                  }`}
-                >
-                  {disc.higher_book}
+                <span className={`px-2 py-0.5 rounded font-medium ${getProbDiffClass(disc.prob_difference)}`}>
+                  {disc.prob_difference}%
                 </span>
+                {disc.line_difference > 0 && (
+                  <span className="block text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    (±{disc.line_difference} pts)
+                  </span>
+                )}
               </td>
             </tr>
           ))}

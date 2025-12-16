@@ -68,8 +68,11 @@ function EVLinesList({ lines, loading }) {
                 <span className="inline-block bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 px-2 py-1 rounded text-sm font-medium">
                   +{line.edge_percent}% Edge
                 </span>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Sharp: {line.sharp_implied_percent}% ({formatOdds(line.sharp_implied_odds)})
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                  Sharp: <span className="font-bold">{formatOdds(line.sharp_implied_odds)}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                    ({line.sharp_implied_percent}% implied)
+                  </span>
                 </p>
 
                 {!isSelected(line.id) ? (
@@ -94,9 +97,9 @@ function EVLinesList({ lines, loading }) {
                   {line.sharp_books_data.map((sharp, i) => (
                     <span
                       key={i}
-                      className="text-xs bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 px-2 py-0.5 rounded"
+                      className="text-sm bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded"
                     >
-                      {sharp.book}: {formatOdds(sharp.price)}
+                      {sharp.book}: <span className="font-bold">{formatOdds(sharp.price)}</span>
                     </span>
                   ))}
                 </div>

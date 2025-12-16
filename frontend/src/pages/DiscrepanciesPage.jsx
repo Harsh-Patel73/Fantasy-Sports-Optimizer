@@ -17,7 +17,7 @@ function DiscrepanciesPage() {
 
       try {
         const result = await fetchDiscrepancies({
-          min_diff: filters.minDiff,
+          min_prob_diff: filters.minProbDiff,
           stat_type: filters.statType || undefined,
           player: filters.player || undefined,
           team: filters.team || undefined,
@@ -32,7 +32,7 @@ function DiscrepanciesPage() {
     }
 
     loadDiscrepancies();
-  }, [filters.minDiff, filters.statType, filters.player, filters.team]);
+  }, [filters.minProbDiff, filters.statType, filters.player, filters.team]);
 
   return (
     <div>
@@ -43,12 +43,12 @@ function DiscrepanciesPage() {
         </p>
       </div>
 
-      <FilterPanel showMinDiff />
+      <FilterPanel showMinProbDiff />
 
       {data.meta && (
         <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
           Found <span className="font-semibold">{data.meta.count}</span> discrepancies
-          with difference &ge; <span className="font-semibold">{data.meta.min_diff_applied}</span>
+          with odds difference &ge; <span className="font-semibold">{data.meta.min_prob_diff_applied}%</span>
         </div>
       )}
 

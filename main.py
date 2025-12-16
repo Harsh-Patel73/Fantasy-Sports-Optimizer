@@ -2,9 +2,9 @@
 BetterBets - Sports Betting Line Comparison Tool
 
 Usage:
-    python main.py              # Scrape data, then start web server
-    python main.py --no-scrape  # Start web server only (skip scraping)
-    python main.py --scrape-only # Run scrapers only (no server)
+    python main.py              # Fetch data, then start web server
+    python main.py --no-fetch   # Start web server only (skip data fetch)
+    python main.py --fetch-only # Fetch data only (no server)
 """
 import argparse
 import subprocess
@@ -42,10 +42,10 @@ def build_frontend():
         print("Frontend already built. Use 'npm run build' in frontend/ to rebuild.")
 
 
-def run_scrapers():
-    """Run all data scrapers."""
+def fetch_data():
+    """Fetch data from all configured API sources."""
     from app.db import setup_database
-    from app.scrapers import run_all_scrapers
+    from app.data_sources import sync_all_data
 
     print("=" * 50)
     print("SETTING UP DATABASE")
@@ -53,10 +53,10 @@ def run_scrapers():
     setup_database()
 
     print("\n" + "=" * 50)
-    print("RUNNING SCRAPERS")
+    print("FETCHING DATA FROM APIs")
     print("=" * 50)
-    run_all_scrapers()
-    print("\nScraping complete.")
+    sync_all_data()
+    print("\nData fetch complete.")
 
 
 def start_server():
@@ -82,33 +82,52 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python main.py              Run scrapers and start server
-  python main.py --no-scrape  Start server only (use existing data)
-  python main.py --scrape-only  Run scrapers only (no server)
+  python main.py              Fetch data and start server
+  python main.py --no-fetch   Start server only (use existing data)
+  python main.py --fetch-only Fetch data only (no server)
+
+Legacy flags (still supported):
+  python main.py --no-scrape  Same as --no-fetch
+  python main.py --scrape-only Same as --fetch-only
         """
     )
     parser.add_argument(
+        '--no-fetch',
+        action='store_true',
+        help='Skip data fetching, just start the web server'
+    )
+    parser.add_argument(
+        '--fetch-only',
+        action='store_true',
+        help='Only fetch data, do not start the server'
+    )
+    # Legacy support
+    parser.add_argument(
         '--no-scrape',
         action='store_true',
-        help='Skip scraping, just start the web server'
+        help=argparse.SUPPRESS  # Hidden, for backwards compatibility
     )
     parser.add_argument(
         '--scrape-only',
         action='store_true',
-        help='Only run scrapers, do not start the server'
+        help=argparse.SUPPRESS  # Hidden, for backwards compatibility
     )
     args = parser.parse_args()
+
+    # Handle legacy flags
+    skip_fetch = args.no_fetch or args.no_scrape
+    fetch_only = args.fetch_only or args.scrape_only
 
     print("\n" + "=" * 50)
     print("BETTERBETS")
     print("=" * 50 + "\n")
 
-    # Run scrapers unless --no-scrape flag is set
-    if not args.no_scrape:
-        run_scrapers()
+    # Fetch data unless --no-fetch flag is set
+    if not skip_fetch:
+        fetch_data()
 
-    # Start server unless --scrape-only flag is set
-    if not args.scrape_only:
+    # Start server unless --fetch-only flag is set
+    if not fetch_only:
         build_frontend()
         start_server()
 

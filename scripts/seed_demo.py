@@ -98,6 +98,78 @@ STAT_BASELINES = {
     "Turnovers": (1.5, 4.5),
 }
 
+# Realistic American odds for player props
+# Standard odds range from heavy favorites (-200) to slight underdogs (+150)
+# Most props are around -110 to -115 (standard juice)
+STANDARD_ODDS = [-115, -112, -110, -108, -105]
+FAVORITE_ODDS = [-130, -125, -120, -118, -115]
+UNDERDOG_ODDS = [+100, +105, +110, +115, +120]
+BIG_FAVORITE_ODDS = [-150, -145, -140, -135, -130]
+BIG_UNDERDOG_ODDS = [+130, +140, +150, +160, +175]
+# Heavy favorites for +EV scenarios (sharp books at these odds = +EV on PrizePicks)
+# -180 = 64.3% implied, -200 = 66.7% implied, -220 = 68.8% implied
+# 5-Pick Flex only needs 54.25%, so these are all +EV!
+HEAVY_FAVORITE_ODDS = [-180, -190, -200, -210, -220, -230, -250]
+
+
+def get_realistic_odds(base_type='standard', variation=False):
+    """
+    Generate realistic American odds.
+
+    American odds rules:
+    - Negative odds (favorites): -100 to -infinity (e.g., -110, -150, -200)
+    - Positive odds (underdogs): +100 to +infinity (e.g., +110, +150, +200)
+    - There is NO range between -100 and +100 (e.g., no -80 or +50)
+
+    Args:
+        base_type: 'standard', 'favorite', 'underdog', 'big_favorite', 'big_underdog'
+        variation: If True, add slight variation to create discrepancies
+    """
+    odds_pools = {
+        'standard': STANDARD_ODDS,
+        'favorite': FAVORITE_ODDS,
+        'underdog': UNDERDOG_ODDS,
+        'big_favorite': BIG_FAVORITE_ODDS,
+        'big_underdog': BIG_UNDERDOG_ODDS,
+        'heavy_favorite': HEAVY_FAVORITE_ODDS,
+    }
+
+    base_odds = random.choice(odds_pools.get(base_type, STANDARD_ODDS))
+
+    if variation:
+        # Add variation while keeping odds realistic
+        if base_odds < 0:
+            # For negative odds, vary by 5-15 points
+            adjustment = random.choice([-15, -10, -5, 0, 5, 10, 15])
+            new_odds = base_odds + adjustment
+            # Ensure we don't go above -100
+            if new_odds > -100:
+                new_odds = -100
+        else:
+            # For positive odds, vary by 5-20 points
+            adjustment = random.choice([-15, -10, -5, 0, 5, 10, 15, 20])
+            new_odds = base_odds + adjustment
+            # Ensure we don't go below +100
+            if new_odds < 100:
+                new_odds = 100
+        return new_odds
+
+    return base_odds
+
+
+def get_opposite_odds(odds):
+    """
+    Generate the opposite side odds (for under when given over odds).
+    In a balanced market, if over is -110, under is also around -110.
+    Books add juice, so both sides are typically slightly negative.
+    """
+    if odds <= -100:
+        # If over is favorite, under might be slight underdog or also favorite
+        return random.choice([-115, -110, -108, -105, +100, +105])
+    else:
+        # If over is underdog, under is favorite
+        return random.choice([-130, -125, -120, -115, -110])
+
 
 def ensure_demo_dir():
     """Create the demo directory if it doesn't exist."""
@@ -203,9 +275,19 @@ def generate_demo_data():
                 # Generate base points value
                 base_points = round(random.uniform(baseline[0], baseline[1]) * 2) / 2  # Round to .5
 
-                # Pinnacle lines (both over and under)
-                pinnacle_price_over = Decimal(str(random.choice([-115, -110, -105, 100, 105])))
-                pinnacle_price_under = Decimal(str(-220 - int(pinnacle_price_over)))  # Rough juice calculation
+                # Randomly choose odds type for this prop
+                # Include heavy_favorite to create +EV scenarios for PrizePicks parlays
+                # Heavy favorites (-180 to -250) imply 64-71% probability, well above 54.25% breakeven
+                odds_type = random.choice([
+                    'standard', 'standard', 'standard',
+                    'favorite', 'favorite',
+                    'heavy_favorite', 'heavy_favorite',  # These create +EV on PrizePicks
+                    'underdog'
+                ])
+
+                # Pinnacle lines (sharp book - reference odds)
+                pinnacle_price_over = get_realistic_odds(odds_type)
+                pinnacle_price_under = get_opposite_odds(pinnacle_price_over)
 
                 # Over line
                 session.add(Statlines(
@@ -213,7 +295,7 @@ def generate_demo_data():
                     player_name=player,
                     matchup_id=matchup.matchup_id,
                     prop_id=prop.prop_id,
-                    price=pinnacle_price_over,
+                    price=Decimal(str(pinnacle_price_over)),
                     points=Decimal(str(base_points)),
                     designation="Over",
                     line_type="total",
@@ -227,7 +309,7 @@ def generate_demo_data():
                     player_name=player,
                     matchup_id=matchup.matchup_id,
                     prop_id=prop.prop_id,
-                    price=pinnacle_price_under,
+                    price=Decimal(str(pinnacle_price_under)),
                     points=Decimal(str(base_points)),
                     designation="Under",
                     line_type="total",
@@ -235,9 +317,13 @@ def generate_demo_data():
                 ))
                 statline_count += 1
 
-                # DraftKings lines (with slight price/points variation from Pinnacle)
-                dk_price_over = pinnacle_price_over + Decimal(str(random.choice([-5, -3, 0, 3, 5])))
-                dk_price_under = Decimal(str(-220 - int(dk_price_over)))
+                # DraftKings lines - sometimes different odds to create discrepancies
+                if random.random() < 0.3:  # 30% chance of different odds type
+                    dk_odds_type = random.choice(['favorite', 'underdog', 'big_favorite', 'big_underdog'])
+                    dk_price_over = get_realistic_odds(dk_odds_type)
+                else:
+                    dk_price_over = get_realistic_odds(odds_type, variation=True)
+                dk_price_under = get_opposite_odds(dk_price_over)
                 dk_points = base_points + random.choice([-0.5, 0, 0, 0, 0.5])
 
                 session.add(Statlines(
@@ -245,7 +331,7 @@ def generate_demo_data():
                     player_name=player,
                     matchup_id=matchup.matchup_id,
                     prop_id=prop.prop_id,
-                    price=dk_price_over,
+                    price=Decimal(str(dk_price_over)),
                     points=Decimal(str(dk_points)),
                     designation="Over",
                     line_type="total",
@@ -258,7 +344,7 @@ def generate_demo_data():
                     player_name=player,
                     matchup_id=matchup.matchup_id,
                     prop_id=prop.prop_id,
-                    price=dk_price_under,
+                    price=Decimal(str(dk_price_under)),
                     points=Decimal(str(dk_points)),
                     designation="Under",
                     line_type="total",
@@ -266,9 +352,13 @@ def generate_demo_data():
                 ))
                 statline_count += 1
 
-                # FanDuel lines (with slight price/points variation from Pinnacle)
-                fd_price_over = pinnacle_price_over + Decimal(str(random.choice([-5, -3, 0, 3, 5])))
-                fd_price_under = Decimal(str(-220 - int(fd_price_over)))
+                # FanDuel lines - sometimes different odds to create discrepancies
+                if random.random() < 0.3:  # 30% chance of different odds type
+                    fd_odds_type = random.choice(['favorite', 'underdog', 'big_favorite', 'big_underdog'])
+                    fd_price_over = get_realistic_odds(fd_odds_type)
+                else:
+                    fd_price_over = get_realistic_odds(odds_type, variation=True)
+                fd_price_under = get_opposite_odds(fd_price_over)
                 fd_points = base_points + random.choice([-0.5, 0, 0, 0, 0.5])
 
                 session.add(Statlines(
@@ -276,7 +366,7 @@ def generate_demo_data():
                     player_name=player,
                     matchup_id=matchup.matchup_id,
                     prop_id=prop.prop_id,
-                    price=fd_price_over,
+                    price=Decimal(str(fd_price_over)),
                     points=Decimal(str(fd_points)),
                     designation="Over",
                     line_type="total",
@@ -289,7 +379,7 @@ def generate_demo_data():
                     player_name=player,
                     matchup_id=matchup.matchup_id,
                     prop_id=prop.prop_id,
-                    price=fd_price_under,
+                    price=Decimal(str(fd_price_under)),
                     points=Decimal(str(fd_points)),
                     designation="Under",
                     line_type="total",
@@ -297,9 +387,13 @@ def generate_demo_data():
                 ))
                 statline_count += 1
 
-                # Caesars lines (with slight price/points variation from Pinnacle)
-                cs_price_over = pinnacle_price_over + Decimal(str(random.choice([-5, -3, 0, 3, 5])))
-                cs_price_under = Decimal(str(-220 - int(cs_price_over)))
+                # Caesars lines - sometimes different odds to create discrepancies
+                if random.random() < 0.3:  # 30% chance of different odds type
+                    cs_odds_type = random.choice(['favorite', 'underdog', 'big_favorite', 'big_underdog'])
+                    cs_price_over = get_realistic_odds(cs_odds_type)
+                else:
+                    cs_price_over = get_realistic_odds(odds_type, variation=True)
+                cs_price_under = get_opposite_odds(cs_price_over)
                 cs_points = base_points + random.choice([-0.5, 0, 0, 0, 0.5])
 
                 session.add(Statlines(
@@ -307,7 +401,7 @@ def generate_demo_data():
                     player_name=player,
                     matchup_id=matchup.matchup_id,
                     prop_id=prop.prop_id,
-                    price=cs_price_over,
+                    price=Decimal(str(cs_price_over)),
                     points=Decimal(str(cs_points)),
                     designation="Over",
                     line_type="total",
@@ -320,7 +414,7 @@ def generate_demo_data():
                     player_name=player,
                     matchup_id=matchup.matchup_id,
                     prop_id=prop.prop_id,
-                    price=cs_price_under,
+                    price=Decimal(str(cs_price_under)),
                     points=Decimal(str(cs_points)),
                     designation="Under",
                     line_type="total",
@@ -328,22 +422,19 @@ def generate_demo_data():
                 ))
                 statline_count += 1
 
-                # PrizePicks line (with intentional variation for discrepancy demo)
-                # About 30% of lines will have notable discrepancies
-                if random.random() < 0.3:
-                    # Create a discrepancy (0.5 to 2.5 points different)
-                    diff = random.choice([-2.5, -2.0, -1.5, -1.0, -0.5, 0.5, 1.0, 1.5, 2.0, 2.5])
-                    pp_points = base_points + diff
-                else:
-                    # Small or no difference
-                    pp_points = base_points + random.choice([-0.5, 0, 0, 0, 0.5])
+                # PrizePicks line (fantasy app - doesn't have real odds in production)
+                # Note: PrizePicks is a fantasy app, not a sportsbook, so in reality
+                # they don't expose traditional odds. We include them here for demo
+                # purposes but the discrepancies page filters them out.
+                pp_price_over = get_realistic_odds(odds_type, variation=True)
+                pp_points = base_points + random.choice([-0.5, 0, 0, 0, 0.5])
 
                 session.add(Statlines(
                     book_id=prizepicks.book_id,
                     player_name=player,
                     matchup_id=matchup.matchup_id,
                     prop_id=prop.prop_id,
-                    price=None,  # PrizePicks doesn't expose prices
+                    price=Decimal(str(pp_price_over)),
                     points=Decimal(str(pp_points)),
                     designation="Over",
                     line_type="demon",

@@ -9,6 +9,124 @@ use this module to ensure data can be compared across sources.
 # Canonical stat names mapped to their known aliases
 # Aliases should be lowercase with spaces and underscores removed
 STAT_MAPPING = {
+    # Game Lines (for moneyline, spread, totals)
+    "Moneyline": [
+        "moneyline",
+        "h2h",
+        "head2head",
+        "headtohead",
+        "ml",
+    ],
+    "Spread": [
+        "spread",
+        "spreads",
+        "pointspread",
+        "handicap",
+    ],
+    "Total": [
+        "total",
+        "totals",
+        "overunder",
+        "ou",
+    ],
+
+    # Football stats
+    "Passing Yards": [
+        "passingyards",
+        "passyds",
+        "player_pass_yds",
+        "playerpassyds",
+    ],
+    "Rushing Yards": [
+        "rushingyards",
+        "rushyds",
+        "player_rush_yds",
+        "playerrushyds",
+    ],
+    "Receiving Yards": [
+        "receivingyards",
+        "recyds",
+        "player_reception_yds",
+        "playerreceptionyds",
+    ],
+    "Receptions": [
+        "receptions",
+        "catches",
+        "rec",
+        "player_receptions",
+        "playerreceptions",
+    ],
+    "Passing TDs": [
+        "passingtds",
+        "passtouchdowns",
+        "player_pass_tds",
+        "playerpasstds",
+    ],
+    "Rushing TDs": [
+        "rushingtds",
+        "rushtouchdowns",
+        "player_rush_tds",
+        "playerrushtds",
+    ],
+    "Anytime TD": [
+        "anytimetd",
+        "anytimetouchdown",
+        "player_anytime_td",
+        "playeranytimetd",
+    ],
+
+    # Baseball stats
+    "Home Runs": [
+        "homeruns",
+        "hrs",
+        "hr",
+        "batter_home_runs",
+        "batterhomeruns",
+    ],
+    "Hits": [
+        "hits",
+        "batter_hits",
+        "batterhits",
+    ],
+    "RBIs": [
+        "rbis",
+        "rbi",
+        "runsbattedin",
+        "batter_rbis",
+        "batterrbis",
+    ],
+    "Strikeouts (Pitching)": [
+        "strikeouts",
+        "ks",
+        "pitcher_strikeouts",
+        "pitcherstrikeouts",
+    ],
+    "Total Bases": [
+        "totalbases",
+        "tb",
+        "batter_total_bases",
+        "battertotalbases",
+    ],
+
+    # Hockey stats
+    "Goals": [
+        "goals",
+        "player_goals",
+        "playergoals",
+    ],
+    "Shots On Goal": [
+        "shotsongoal",
+        "sog",
+        "player_shots_on_goal",
+        "playershotsongoal",
+    ],
+    "Power Play Points": [
+        "powerplaypoints",
+        "ppp",
+        "player_power_play_points",
+        "playerpowerplaypoints",
+    ],
+
     # Combo stats
     "Pts+Rebs+Asts": [
         "pointsreboundsassists",

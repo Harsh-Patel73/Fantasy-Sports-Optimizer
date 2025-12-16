@@ -35,8 +35,15 @@ def find_ev_lines(betting_book, sharp_books, parlay_type, team=None, player=None
     """
     Find lines where sharp book odds imply better probability than break-even.
 
-    A line is +EV if: sharp_implied_prob < breakeven_prob
-    (Lower probability from sharp books = better actual odds = +EV for the bettor)
+    A line is +EV if: sharp_implied_prob > breakeven_prob
+    (Higher probability from sharp books = they think it will hit more often = +EV for the bettor)
+
+    Example:
+        - 5-Pick Flex breakeven: -119 odds (~54.25% implied probability)
+        - PrizePicks has Over 25.5 Points for Player X
+        - Pinnacle has same line at -210 odds (~67.7% implied probability)
+        - Sharp book thinks it hits 67.7% but you only need 54.25% to break even
+        - Edge = 67.7% - 54.25% = +13.45% (this is +EV!)
 
     Args:
         betting_book: User's betting platform (e.g., 'PrizePicks')
@@ -148,10 +155,12 @@ def find_ev_lines(betting_book, sharp_books, parlay_type, team=None, player=None
             avg_sharp_implied = sum(implied_probs) / len(implied_probs)
 
             # Calculate edge: positive edge means +EV
-            # Edge = breakeven_prob - sharp_implied_prob
-            edge = breakeven_prob - avg_sharp_implied
+            # Edge = sharp_implied_prob - breakeven_prob
+            # If sharp book thinks probability is HIGHER (worse odds like -210) than breakeven (-119),
+            # that means sharp book expects it to hit more often than you need to break even = +EV
+            edge = avg_sharp_implied - breakeven_prob
 
-            # Only include lines with positive edge (sharp books say odds are better than break-even)
+            # Only include lines with positive edge (sharp books think it hits more than breakeven requires)
             if edge > 0:
                 ev_lines.append({
                     'id': statline.line_id,
@@ -284,7 +293,8 @@ def validate_parlay_lines(line_ids, sharp_books, parlay_type):
                 implied_probs = [s['implied_prob'] for s in sharp_data if s['implied_prob'] is not None]
                 if implied_probs:
                     avg_sharp_implied = sum(implied_probs) / len(implied_probs)
-                    edge = breakeven_prob - avg_sharp_implied
+                    # Edge = sharp_implied - breakeven (positive means +EV)
+                    edge = avg_sharp_implied - breakeven_prob
                     is_ev = edge > 0
                 else:
                     avg_sharp_implied = None
