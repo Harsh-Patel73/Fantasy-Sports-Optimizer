@@ -85,10 +85,6 @@ Examples:
   python main.py              Fetch data and start server
   python main.py --no-fetch   Start server only (use existing data)
   python main.py --fetch-only Fetch data only (no server)
-
-Legacy flags (still supported):
-  python main.py --no-scrape  Same as --no-fetch
-  python main.py --scrape-only Same as --fetch-only
         """
     )
     parser.add_argument(
