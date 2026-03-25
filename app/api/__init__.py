@@ -19,12 +19,13 @@ def create_app(config_class=None):
     app.config['SQLALCHEMY_DATABASE_URI'] = config_class.SQLALCHEMY_DATABASE_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = config_class.SQLALCHEMY_TRACK_MODIFICATIONS
 
-    # Enable CORS for development (React dev server)
+    # Enable CORS for development and production
     CORS(app, origins=[
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
+        "https://fantasy-sports-optimizer-steel.vercel.app",
     ])
 
     # Register API blueprints
