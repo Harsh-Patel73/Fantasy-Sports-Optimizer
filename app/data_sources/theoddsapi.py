@@ -110,7 +110,7 @@ def get_or_create_book(session, book_name, book_type, timestamp):
     """Get existing book or create new one."""
     book = session.query(Books).filter_by(book_name=book_name).first()
     if not book:
-        book = Books(book_name=book_name, book_type=book_type, scrape_timestamp=timestamp)
+        book = Books(book_name=book_name, book_type=book_type)
         session.add(book)
         session.flush()
     return book
@@ -126,7 +126,6 @@ def get_or_create_matchup(session, home_team, away_team, timestamp):
         matchup = Matchups(
             home_team=home_team,
             away_team=away_team,
-            scrape_timestamp=timestamp
         )
         session.add(matchup)
         session.flush()
@@ -163,7 +162,6 @@ def add_statline(session, book_id, player_name, matchup_id, prop_id, price, desi
         designation=designation,
         points=Decimal(str(points)) if points is not None else Decimal('0.00'),
         line_type=line_type,
-        scrape_timestamp=timestamp
     )
     session.add(statline)
 

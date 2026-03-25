@@ -49,7 +49,6 @@ def fetch_data():
     """Fetch data from all configured API sources."""
     from app.db import setup_database
     from app.data_sources import sync_all_data
-
     print("=" * 50)
     print("SETTING UP DATABASE")
     print("=" * 50)
