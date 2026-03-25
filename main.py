@@ -11,6 +11,9 @@ import subprocess
 import sys
 import os
 
+from app.api import create_app
+
+app = create_app()
 
 def build_frontend():
     """Build React frontend if not already built or if source is newer."""
@@ -61,9 +64,6 @@ def fetch_data():
 
 def start_server():
     """Start Flask server serving API + static frontend."""
-    from app.api import create_app
-
-    app = create_app()
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_ENV', 'development') == 'development'
 
